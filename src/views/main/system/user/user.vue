@@ -41,6 +41,8 @@ export default defineComponent({
       }
     })
     //拿存储的数据
+    console.log(1)
+
     const userList = computed(() => store.state.system.userList)
     const userCount = computed(() => store.state.system.userCount)
 
