@@ -1,5 +1,5 @@
 import { IBreabcumb } from '@/base-ui/breadcrumb'
-import { first } from 'lodash'
+
 import { RouteRecordRaw } from 'vue-router'
 
 let firstMenu: any = null
@@ -61,18 +61,37 @@ export function pathMapBreadcrums(userMenus: any[], currentPath: string): any {
   pathMapToMenu(userMenus, currentPath, breadcrumbs)
   return breadcrumbs
 }
+
+//获取用户权限函数
+export function mapMenusToPermissions(userMenus: any[]) {
+  const permissions: string[] = []
+  const _recurseGetPermission = (menus: any[]) => {
+    for (const menu of menus) {
+      if (menu.type === 1 || menu.type === 2) {
+        _recurseGetPermission(menu.children ?? [])
+      } else if (menu.type === 3) {
+        permissions.push(menu.permission)
+      }
+    }
+  }
+  _recurseGetPermission(userMenus)
+  return permissions
+}
+//获取菜单中所有叶子结点 用于创建编辑角色
+export function mapMenuLeafKeys(menuList: any[]) {
+  const leafKeys: number[] = []
+  const _recurseGetLeaf = (menuList: any[]) => {
+    for (const menu of menuList) {
+      if (menu.children) {
+        _recurseGetLeaf(menu.children)
+      } else {
+        leafKeys.push(menu.id)
+      }
+    }
+  }
+  _recurseGetLeaf(menuList)
+  return leafKeys
+}
+
 //进入网页获取默认的默认路径
 export { firstMenu }
-//递归查找 路径匹配 ：吧当前路径在所有路径里匹配 拿到对应对应路径的对象(中的id)
-// export function pathMapToMenu(userMenus: any[], currentPath: string): any {
-//   for (const menu of userMenus) {
-//     if (menu.type === 1) {
-//       const findMenu = pathMapToMenu(menu.children ?? [], currentPath)
-//       if (findMenu) {
-//         return findMenu
-//       }
-//     } else if (menu.type === 2 && menu.url === currentPath) {
-//       return menu
-//     }
-//   }
-// }

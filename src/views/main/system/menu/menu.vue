@@ -1,16 +1,27 @@
 <template>
   <div class="menu">
-    <h2>menu</h2>
+    <page-content
+      :contentTableConfig="contentTableConfig"
+      pageName="menu"
+    ></page-content>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+//引入组件和配置
+import pageContent from '@/components/page-content'
+import { contentTableConfig } from './config/content.config'
 
 export default defineComponent({
   name: 'menu',
+  components: {
+    pageContent
+  },
   setup() {
-    return {}
+    return {
+      contentTableConfig
+    }
   }
 })
 </script>

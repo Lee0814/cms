@@ -7,7 +7,11 @@
       <el-row>
         <template v-for="item in formItems" :key="item.label">
           <el-col v-bind="colLayout">
-            <el-form-item :label="item.label" :style="itemLayout">
+            <el-form-item
+              :label="item.label"
+              :style="itemLayout"
+              v-if="!item.isHidden"
+            >
               <template
                 v-if="item.type === 'input' || item.type === 'password'"
               >
@@ -52,7 +56,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref, watch } from 'vue'
+import { defineComponent, PropType, ref, watch, computed } from 'vue'
 import { IFormItem } from '../types/'
 export default defineComponent({
   components: {},
@@ -62,8 +66,7 @@ export default defineComponent({
       required: true
     },
     formItems: {
-      type: Array as PropType<IFormItem[]>,
-      default: () => []
+      type: Array as PropType<IFormItem[]>
     },
     labelWidth: {
       type: String,
@@ -86,12 +89,13 @@ export default defineComponent({
     }
   },
   setup(props, { emit }) {
-    //父组件传入的值 最好不要双向绑定并修改
+    //父组件传入的值 双向绑定并修改
     //  通过   1.创建一个新的对象（解构赋值）
     //        2.自己手动监听组件里值的变化
     //        3.发送事件给父组件
     //        4.父组件自己修改
     const formData = ref({ ...props.modelValue })
+
     watch(formData, (newValue) => emit('update:modelValue', newValue), {
       deep: true
     })

@@ -1,82 +1,101 @@
 <template>
   <div class="user">
-    <page-search :searchFormConfig="searchFormConfig" />
-
-    <div class="content">
-      <ly-table :listData="userList" :propList="propList">
-        <template #status="scope">
-          <el-button>{{ scope.row.enable ? '启用' : '禁用' }}</el-button>
-        </template>
-        <template #createAt="scope">
-          <strong>{{ scope.row.createAt }}</strong>
-        </template>
-      </ly-table>
-    </div>
+    <page-search
+      @resetBtnClick="handleResetBtnClick"
+      @queryBtnClick="handleQueryBtnClick"
+      :searchFormConfig="searchFormConfig"
+    />
+    <page-content
+      ref="pageContentRef"
+      pageName="users"
+      :contentTableConfig="contentTableConfig"
+      @newBtnClick="handleNewData"
+      @editBtnClick="handleEditData"
+    ></page-content>
+    <page-modal
+      pageName="users"
+      ref="pageModalRef"
+      :defaultInfo="defaultInfo"
+      :modalConfig="modalConfigRef"
+    ></page-modal>
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from 'vue'
-
+import { defineComponent, computed } from 'vue'
 import { useStore } from '@/store'
 
+import { contentTableConfig } from './config/content.config'
 import { searchFormConfig } from './config/search.config'
+import { modalConfig } from './config/modal.config'
 
+import pageContent from '@/components/page-content'
 import pageSearch from '@/components/page-search'
-import lyTable from '@/base-ui/table'
+import pageModal from '@/components/page-modal'
+
+import { usePageSearch } from '@/hooks/use-page-search'
+import { usePageModal } from '@/hooks/use-page-modal'
+
 export default defineComponent({
   name: 'user',
   components: {
     pageSearch,
-    lyTable
+    pageContent,
+    pageModal
   },
   setup() {
+    // 1.处理密码逻辑 让每个组件自己传两个函数到公共组件，决定是否显示password
+    const newCallback = () => {
+      const passwordItem = modalConfig.formItems.find(
+        (item) => item.field === 'password'
+      )
+      passwordItem!.isHidden = false
+    }
+    const editCallback = () => {
+      const passwordItem = modalConfig.formItems.find(
+        (item) => item.field === 'password'
+      )
+      passwordItem!.isHidden = true
+    }
+    // 2.动态添加部门和角色列表
     const store = useStore()
-    //发送请求
-    store.dispatch('system/getPageListAction', {
-      pageUrl: '/users/list',
-      queryInfo: {
-        offset: 0,
-        size: 10
-      }
+    const modalConfigRef = computed(() => {
+      const departmentItem = modalConfig.formItems.find(
+        (item) => item.field === 'departmentId'
+      )
+      departmentItem!.options = store.state.entireDepartment.map((item) => {
+        return { title: item.name, value: item.id }
+      })
+      const roleItem = modalConfig.formItems.find(
+        (item) => item.field === 'roleId'
+      )
+      roleItem!.options = store.state.entireRole.map((item) => {
+        return { title: item.name, value: item.id }
+      })
+      return modalConfig
     })
-    //拿存储的数据
-    console.log(1)
 
-    const userList = computed(() => store.state.system.userList)
-    const userCount = computed(() => store.state.system.userCount)
+    //3.把重置和搜索抽成hook
+    const [pageContentRef, handleResetBtnClick, handleQueryBtnClick] =
+      usePageSearch()
 
-    const propList = [
-      { prop: 'name', label: '用户名', minWidth: '100' },
-      { prop: 'realname', label: '真实姓名', minWidth: '100' },
-      { prop: 'cellphone', label: '电话号码', minWidth: '100' },
-      { prop: 'enable', label: '状态', minWidth: '100', slotName: 'status' },
-      {
-        prop: 'createAt',
-        label: '创建时间',
-        minWidth: '100',
-        slotName: 'createAt'
-      },
-      {
-        prop: 'updateAt',
-        label: '更新时间',
-        minWidth: '100',
-        slotName: 'updateAt'
-      }
-    ]
+    const [pageModalRef, defaultInfo, handleEditData, handleNewData] =
+      usePageModal(newCallback, editCallback)
+
     return {
+      pageContentRef,
       searchFormConfig,
-      userList,
-      userCount,
-      propList
+      contentTableConfig,
+      handleResetBtnClick,
+      handleQueryBtnClick,
+      modalConfigRef,
+      handleNewData,
+      handleEditData,
+      pageModalRef,
+      defaultInfo
     }
   }
 })
 </script>
 
-<style scoped>
-.content {
-  padding: 20px;
-  border-top: 20px solid #f5f5f5;
-}
-</style>
+<style scoped></style>

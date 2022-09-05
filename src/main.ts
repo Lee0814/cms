@@ -10,9 +10,6 @@ import 'element-plus/dist/index.css'
 import { setupStore } from './store/index'
 // import './service/request/axios_demo'
 
-//局部注册组件
-// import { registerApp } from '@/global/index'
-// registerApp(app)
 const app = createApp(App)
 //导入 图标
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
@@ -30,6 +27,9 @@ app.use(router)
 app.use(ElementPlus)
 app.mount('#app')
 
+//局部注册组件
+import { registerApp } from '@/global/index'
+registerApp(app)
 //解决警告 Added non-passive event listener to a scroll-blocking 'touchstart' event.
 // Consider marking event handler as 'passive' to make the page more responsive.
 import 'default-passive-events'

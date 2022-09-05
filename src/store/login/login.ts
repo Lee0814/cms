@@ -4,7 +4,7 @@ import { ILoginState } from './types'
 import { IRootState } from '../types'
 import { IAccount } from '@/service/login/types'
 
-import mapMenusToRoutes from '@/utils/map-menus'
+import mapMenusToRoutes, { mapMenusToPermissions } from '@/utils/map-menus'
 import {
   accountLoginRequest,
   requestUserInfoById,
@@ -18,7 +18,8 @@ const loginModule: Module<ILoginState, IRootState> = {
     return {
       token: '',
       userInfo: {},
-      userMenus: []
+      userMenus: [],
+      permissions: []
     }
   },
   mutations: {
@@ -38,11 +39,15 @@ const loginModule: Module<ILoginState, IRootState> = {
       routes.forEach((route) => {
         router.addRoute('main', route)
       })
+      //获取用户按钮权限
+      const permissions = mapMenusToPermissions(userMenus)
+      console.log(permissions)
+      state.permissions = permissions
     }
   },
   getters: {},
   actions: {
-    async accountLoginAction({ commit }, payload: IAccount) {
+    async accountLoginAction({ commit, dispatch }, payload: IAccount) {
       console.log('执行accountLoginAction', payload)
       //实现登录逻辑
       const loginResult = await accountLoginRequest(payload)
@@ -52,10 +57,12 @@ const loginModule: Module<ILoginState, IRootState> = {
 
       LocalCache.setCache('token', token)
 
+      //发送初始化请求（完整的角色部门信息） 去调用根的action(有token才能请求)
+      dispatch('getInitialDataAction', null, { root: true })
+
       //请求用户信息
       const userInfoResult = await requestUserInfoById(id)
       const userInfo = userInfoResult.data
-      console.log(userInfo)
 
       commit('changeUserInfo', userInfo)
       LocalCache.setCache('user', userInfo)
@@ -72,10 +79,12 @@ const loginModule: Module<ILoginState, IRootState> = {
     },
 
     //封装在首页刷新无token的解决办法
-    loadLocalLogin({ commit }) {
+    loadLocalLogin({ commit, dispatch }) {
       const token = LocalCache.getCache('token')
       if (token) {
         commit('changeToken', token)
+        //发送初始化请求（完整的角色部门信息） 去调用根的action
+        dispatch('getInitialDataAction', null, { root: true })
       }
       const userInfo = LocalCache.getCache('user')
       if (userInfo) {

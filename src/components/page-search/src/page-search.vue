@@ -6,8 +6,10 @@
       </template>
       <template #footer>
         <div class="btns">
-          <el-button :icon="Refresh">重置</el-button>
-          <el-button type="primary" :icon="Search">搜索</el-button>
+          <el-button :icon="Refresh" @click="handleResetClick">重置</el-button>
+          <el-button type="primary" :icon="Search" @click="handleQueryClick"
+            >搜索</el-button
+          >
         </div>
       </template>
     </ly-form>
@@ -28,18 +30,33 @@ export default defineComponent({
       required: true
     }
   },
-  setup() {
-    const formData = ref({
-      id: '',
-      name: '',
-      password: '',
-      sport: '',
-      createTime: ''
-    })
+  emits: ['resetBtnClick', 'queryBtnClick'],
+  setup(props, { emit }) {
+    //双向绑定的属性应该由field字段决定
+    const formItems = props.searchFormConfig?.formItems ?? []
+    const formOriginData: any = {}
+    for (const item of formItems) {
+      //循环添加每一个搜索项的field字段并置空
+      formOriginData[item.field] = ''
+    }
+    const formData = ref(formOriginData)
+
+    //用户点击重置
+    const handleResetClick = () => {
+      for (const key in formOriginData) {
+        formData.value[`${key}`] = formOriginData[key]
+      }
+      emit('resetBtnClick')
+    }
+    const handleQueryClick = () => {
+      emit('queryBtnClick', formData.value)
+    }
     return {
       formData,
       Search,
-      Refresh
+      Refresh,
+      handleResetClick,
+      handleQueryClick
     }
   }
 })
